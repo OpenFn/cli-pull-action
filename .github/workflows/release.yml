@@ -1,0 +1,26 @@
+# Automatically update floating major version tags (e.g. v1) when a release is
+# published. This lets consumers pin to @v1 and get the latest v1.x.x.
+name: Update major version tag
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-major-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Move major version tag
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          VERSION=${GITHUB_REF#refs/tags/}
+          MAJOR=$(echo "$VERSION" | grep -oE '^v[0-9]+')
+          git tag -fa "$MAJOR" -m "Update $MAJOR to $VERSION"
+          git push origin "$MAJOR" --force
