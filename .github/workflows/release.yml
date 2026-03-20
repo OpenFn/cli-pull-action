@@ -22,5 +22,13 @@ jobs:
           git config user.email github-actions[bot]@users.noreply.github.com
           VERSION=${GITHUB_REF#refs/tags/}
           MAJOR=$(echo "$VERSION" | grep -oE '^v[0-9]+')
+
+          # Only move the tag forward — skip if a newer version already exists
+          LATEST=$(git tag -l "$MAJOR.*" --sort=-version:refname | head -n1)
+          if [ "$LATEST" != "$VERSION" ]; then
+            echo "Skipping: $VERSION is not the latest ($LATEST is newer)"
+            exit 0
+          fi
+
           git tag -fa "$MAJOR" -m "Update $MAJOR to $VERSION"
           git push origin "$MAJOR" --force
